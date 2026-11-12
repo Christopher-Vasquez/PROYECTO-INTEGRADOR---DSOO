@@ -102,7 +102,8 @@ git push -u origin main
 
 ## Integrantes
 
-- _Nombre del integrante 1_
-- _Nombre del integrante 2_
+- Christopher William Vásquez Vasquez 
+- Fabiano Josue Enriquez Molina
+- Edgard Darick Arcana Gonzales
 
 Curso: Desarrollo de Software Orientado a Objetos
