@@ -89,17 +89,6 @@ javac -encoding UTF-8 -d out $(find src/main -name "*.java")
 java -cp out com.aulacheck.Main
 ```
 
-## Subir a GitHub
-
-```bash
-git init
-git add .
-git commit -m "Versión inicial de AulaCheck"
-git branch -M main
-git remote add origin https://github.com/<tu-usuario>/AulaCheck.git
-git push -u origin main
-```
-
 ## Integrantes
 
 - Christopher William Vásquez Vasquez 
