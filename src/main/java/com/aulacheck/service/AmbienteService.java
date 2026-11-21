@@ -4,6 +4,7 @@ import com.aulacheck.exception.AulaCheckException;
 import com.aulacheck.exception.PermisoDenegadoException;
 import com.aulacheck.model.Ambiente;
 import com.aulacheck.model.EstadoAmbiente;
+import com.aulacheck.model.EstadoReserva;
 import com.aulacheck.model.Usuario;
 
 import java.time.LocalDate;
@@ -28,12 +29,23 @@ public class AmbienteService {
 
     public void cambiarEstado(Usuario actor, int idAmbiente, EstadoAmbiente nuevoEstado) {
         exigirPermiso(actor);
-        buscarPorId(idAmbiente).setEstado(nuevoEstado);
+        Ambiente ambiente = buscarPorId(idAmbiente);
+        if (nuevoEstado == EstadoAmbiente.DISPONIBLE && ambiente.tieneIncidenciasPendientes()) {
+            throw new AulaCheckException(
+                    "No se puede cambiar '" + ambiente.getNombre() + "' a DISPONIBLE mientras tenga incidencias pendientes");
+        }
+        ambiente.setEstado(nuevoEstado);
     }
 
     public void eliminar(Usuario actor, int idAmbiente) {
         exigirPermiso(actor);
-        buscarPorId(idAmbiente);
+        Ambiente ambiente = buscarPorId(idAmbiente);
+        boolean tieneReservasActivas = ambiente.getReservas().stream()
+                .anyMatch(r -> r.getEstado() == EstadoReserva.ACTIVA);
+        if (tieneReservasActivas || ambiente.tieneIncidenciasPendientes()) {
+            throw new AulaCheckException(
+                    "No se puede eliminar '" + ambiente.getNombre() + "' porque tiene reservas activas o incidencias pendientes");
+        }
         ambientes.remove(idAmbiente);
     }
 
@@ -50,6 +62,12 @@ public class AmbienteService {
     }
 
     public List<Ambiente> listarDisponibles(LocalDate fecha, LocalTime horaInicio, LocalTime horaFin) {
+        if (fecha == null || horaInicio == null || horaFin == null) {
+            throw new IllegalArgumentException("Fecha y horas son obligatorias");
+        }
+        if (!horaInicio.isBefore(horaFin)) {
+            throw new IllegalArgumentException("La hora de inicio debe ser anterior a la hora de fin");
+        }
         return ambientes.values().stream()
                 .filter(a -> a.consultarDisponibilidad(fecha, horaInicio, horaFin))
                 .toList();
