@@ -108,4 +108,58 @@ class ReservaServiceTest {
         assertEquals(LocalTime.of(8, 0), historial.get(0).getHoraInicio());
         assertEquals(2, historial.size());
     }
+    @Test
+    void rechazaReservaEnFechaPasada() {
+        LocalDate ayer = LocalDate.now().minusDays(1);
+        assertThrows(IllegalArgumentException.class,
+                () -> reservas.registrarReserva(docente, 1, ayer, LocalTime.of(8, 0), LocalTime.of(10, 0)));
+    }
+
+    @Test
+    void multiplesIncidenciasMantienenEnMantenimientoHastaResolverTodas() {
+        Incidencia inc1 = incidencias.reportar(docente, 1, "Proyector no enciende");
+        Incidencia inc2 = incidencias.reportar(estudiante, 1, "Aire acondicionado malogrado");
+
+        assertEquals(EstadoAmbiente.EN_MANTENIMIENTO, ambientes.buscarPorId(1).getEstado());
+
+        // Al resolver solo una, debe seguir en mantenimiento
+        incidencias.actualizarEstado(tecnico, inc1.getIdIncidencia(), EstadoIncidencia.RESUELTA);
+        assertEquals(EstadoAmbiente.EN_MANTENIMIENTO, ambientes.buscarPorId(1).getEstado());
+
+        // Recién al resolver la segunda vuelve a disponible
+        incidencias.actualizarEstado(tecnico, inc2.getIdIncidencia(), EstadoIncidencia.RESUELTA);
+        assertEquals(EstadoAmbiente.DISPONIBLE, ambientes.buscarPorId(1).getEstado());
+    }
+
+    @Test
+    void impideCambiarADisponibleConIncidenciasPendientes() {
+        incidencias.reportar(docente, 1, "Pizarra dañada");
+        assertThrows(com.aulacheck.exception.AulaCheckException.class,
+                () -> ambientes.cambiarEstado(admin, 1, EstadoAmbiente.DISPONIBLE));
+    }
+
+    @Test
+    void reservasCanceladasNoCuentanEnUsoPorAmbiente() {
+        Reserva r1 = reservas.registrarReserva(docente, 1, dia, LocalTime.of(8, 0), LocalTime.of(10, 0));
+        reservas.registrarReserva(estudiante, 1, dia, LocalTime.of(10, 0), LocalTime.of(12, 0));
+
+        reservas.cancelarReserva(docente, r1.getIdReserva());
+
+        assertEquals(1L, reservas.usoPorAmbiente().get("A-101"));
+    }
+
+    @Test
+    void noPermiteCancelarDosVecesLaMismaReserva() {
+        Reserva r = reservas.registrarReserva(docente, 1, dia, LocalTime.of(8, 0), LocalTime.of(10, 0));
+        reservas.cancelarReserva(docente, r.getIdReserva());
+
+        assertThrows(com.aulacheck.exception.AulaCheckException.class,
+                () -> reservas.cancelarReserva(docente, r.getIdReserva()));
+    }
+
+    @Test
+    void validarRangoHorarioAlConsultarDisponibilidad() {
+        assertThrows(IllegalArgumentException.class,
+                () -> ambientes.listarDisponibles(dia, LocalTime.of(14, 0), LocalTime.of(10, 0)));
+    }
 }
