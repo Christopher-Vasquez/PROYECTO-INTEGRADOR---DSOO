@@ -1,5 +1,7 @@
 package com.aulacheck.model;
 
+import com.aulacheck.exception.AulaCheckException;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -47,6 +49,9 @@ public class Reserva {
     }
 
     public void cancelarReserva() {
+        if (this.estado == EstadoReserva.CANCELADA) {
+            throw new AulaCheckException("La reserva #" + idReserva + " ya se encuentra cancelada");
+        }
         this.estado = EstadoReserva.CANCELADA;
     }
 
