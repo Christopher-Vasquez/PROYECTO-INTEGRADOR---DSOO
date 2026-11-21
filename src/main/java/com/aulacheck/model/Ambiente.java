@@ -1,5 +1,7 @@
 package com.aulacheck.model;
 
+import com.aulacheck.exception.AulaCheckException;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -41,13 +43,23 @@ public abstract class Ambiente {
 
     /**
      * Indica si el ambiente puede reservarse en la fecha y rango horario dados:
-     * debe estar DISPONIBLE y no cruzarse con ninguna reserva activa.
+     * valida el rango horario, verifica estado disponible y revisa que no haya solapes.
      */
     public boolean consultarDisponibilidad(LocalDate fecha, LocalTime horaInicio, LocalTime horaFin) {
+        if (fecha == null || horaInicio == null || horaFin == null) {
+            throw new IllegalArgumentException("Fecha y horas son obligatorias");
+        }
+        if (!horaInicio.isBefore(horaFin)) {
+            throw new IllegalArgumentException("La hora de inicio debe ser anterior a la hora de fin");
+        }
         if (estado != EstadoAmbiente.DISPONIBLE) {
             return false;
         }
         return reservas.stream().noneMatch(r -> r.solapaCon(fecha, horaInicio, horaFin));
+    }
+
+    public boolean tieneIncidenciasPendientes() {
+        return incidencias.stream().anyMatch(i -> i.getEstado().estaPendiente());
     }
 
     // Package-private: solo las clases del modelo enlazan las asociaciones.
@@ -62,7 +74,7 @@ public abstract class Ambiente {
 
     /** Si hay incidencias pendientes pasa a mantenimiento; si todas se resolvieron, vuelve a disponible. */
     void actualizarEstadoPorIncidencias() {
-        boolean hayPendientes = incidencias.stream().anyMatch(i -> i.getEstado().estaPendiente());
+        boolean hayPendientes = tieneIncidenciasPendientes();
         if (hayPendientes && estado == EstadoAmbiente.DISPONIBLE) {
             estado = EstadoAmbiente.EN_MANTENIMIENTO;
         } else if (!hayPendientes && estado == EstadoAmbiente.EN_MANTENIMIENTO) {
@@ -86,7 +98,14 @@ public abstract class Ambiente {
         }
         this.capacidad = capacidad;
     }
-    public void setEstado(EstadoAmbiente estado) { this.estado = estado; }
+
+    public void setEstado(EstadoAmbiente estado) {
+        if (estado == EstadoAmbiente.DISPONIBLE && tieneIncidenciasPendientes()) {
+            throw new AulaCheckException(
+                    "No se puede marcar '" + nombre + "' como DISPONIBLE mientras tenga incidencias pendientes");
+        }
+        this.estado = estado;
+    }
 
     @Override
     public String toString() {
