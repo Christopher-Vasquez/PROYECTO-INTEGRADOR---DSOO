@@ -21,7 +21,12 @@ AulaCheck/
 ├── docs/diagramas/                 # Diagramas UML
 └── src/
     ├── main/java/com/aulacheck/
-    │   ├── Main.java               # Demo por consola de los casos de uso
+    │   ├── Main.java               # Punto de entrada de la aplicación Swing
+    │   ├── ui/                     # Interfaz gráfica en Java Swing
+    │   │   ├── AulaCheckFrame      # Ventana principal y selector de rol
+    │   │   ├── PanelAmbientes      # Consulta de disponibilidad y gestión admin
+    │   │   ├── PanelReservas       # Registro, historial y cancelación de reservas
+    │   │   └── PanelIncidencias    # Reporte y atención técnica de fallas
     │   ├── model/                  # Clases del diagrama de clases
     │   │   ├── Ambiente (abstracta) ── Aula, Laboratorio, SalaEstudio
     │   │   ├── Usuario, Reserva, Incidencia
