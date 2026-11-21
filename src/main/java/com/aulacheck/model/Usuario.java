@@ -50,6 +50,13 @@ public class Usuario {
      */
     public Reserva crearReserva(int idReserva, Ambiente ambiente, LocalDate fecha,
                                 LocalTime horaInicio, LocalTime horaFin) {
+        if (fecha == null || horaInicio == null || horaFin == null) {
+            throw new IllegalArgumentException("Fecha y horas son obligatorias");
+        }
+        LocalDate hoy = LocalDate.now();
+        if (fecha.isBefore(hoy) || (fecha.equals(hoy) && horaInicio.isBefore(LocalTime.now()))) {
+            throw new IllegalArgumentException("No se pueden registrar reservas en fechas u horas pasadas");
+        }
         if (ambiente.getEstado() != EstadoAmbiente.DISPONIBLE) {
             throw new AmbienteNoDisponibleException(
                     "El ambiente '" + ambiente.getNombre() + "' no está disponible (" + ambiente.getEstado() + ")");
