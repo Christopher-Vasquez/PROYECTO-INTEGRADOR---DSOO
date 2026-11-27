@@ -94,4 +94,11 @@ public class Usuario {
     public String toString() {
         return nombre + " (" + rol + ")";
     }
+    void agregarReserva(Reserva reserva) {
+        reservas.add(reserva);
+    }
+
+    void agregarIncidencia(Incidencia incidencia) {
+        incidencias.add(incidencia);
+    }
 }

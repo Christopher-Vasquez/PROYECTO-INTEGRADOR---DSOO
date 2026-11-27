@@ -68,4 +68,13 @@ public class Reserva {
         return String.format("Reserva #%d | %s | %s %s-%s | %s | %s",
                 idReserva, ambiente.getNombre(), fecha, horaInicio, horaFin, usuario.getNombre(), estado);
     }
+    public static Reserva reconstruir(int idReserva, LocalDate fecha, LocalTime horaInicio,
+                                      LocalTime horaFin, EstadoReserva estado,
+                                      Usuario usuario, Ambiente ambiente) {
+        Reserva r = new Reserva(idReserva, fecha, horaInicio, horaFin, usuario, ambiente);
+        r.estado = estado;
+        ambiente.agregarReserva(r);
+        usuario.agregarReserva(r);
+        return r;
+    }
 }

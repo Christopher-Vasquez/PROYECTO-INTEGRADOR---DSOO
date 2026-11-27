@@ -24,6 +24,17 @@ public class Incidencia {
         this.ambiente = ambiente;
     }
 
+    // Nuevo constructor con fecha y estado originales
+    Incidencia(int idIncidencia, String descripcion, LocalDate fechaReporte,
+               EstadoIncidencia estado, Usuario reportadoPor, Ambiente ambiente) {
+        this.idIncidencia = idIncidencia;
+        this.descripcion = descripcion;
+        this.fechaReporte = fechaReporte;
+        this.estado = estado;
+        this.reportadoPor = reportadoPor;
+        this.ambiente = ambiente;
+    }
+
     /** Cambia el estado y sincroniza el estado del ambiente afectado. */
     public void actualizarEstado(EstadoIncidencia nuevoEstado) {
         this.estado = nuevoEstado;
@@ -41,5 +52,14 @@ public class Incidencia {
     public String toString() {
         return String.format("Incidencia #%d | %s | %s | %s | %s",
                 idIncidencia, ambiente.getNombre(), descripcion, fechaReporte, estado);
+    }
+
+    // NUEVO MÉTODO PARA RECONSTRUIR DESDE JSON 
+    public static Incidencia reconstruir(int idIncidencia, String descripcion, LocalDate fechaReporte,
+                                         EstadoIncidencia estado, Usuario reportadoPor, Ambiente ambiente) {
+        Incidencia inc = new Incidencia(idIncidencia, descripcion, fechaReporte, estado, reportadoPor, ambiente);
+        ambiente.agregarIncidencia(inc);
+        reportadoPor.agregarIncidencia(inc);
+        return inc;
     }
 }
