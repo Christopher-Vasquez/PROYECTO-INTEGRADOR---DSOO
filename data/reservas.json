@@ -1,0 +1,11 @@
+[
+  {
+    "idReserva": 1,
+    "idUsuario": 1,
+    "idAmbiente": 1,
+    "fecha": "2026-11-28",
+    "horaInicio": "10:00",
+    "horaFin": "12:00",
+    "estado": "ACTIVA"
+  }
+]

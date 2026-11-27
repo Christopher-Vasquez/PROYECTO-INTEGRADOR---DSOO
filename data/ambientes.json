@@ -1,0 +1,30 @@
+[
+  {
+    "tipo": "Aula",
+    "idAmbiente": 1,
+    "nombre": "A-101",
+    "ubicacion": "Pabellón A, piso 1",
+    "capacidad": 40,
+    "estado": "DISPONIBLE",
+    "tieneProyector": true
+  },
+  {
+    "tipo": "Laboratorio",
+    "idAmbiente": 2,
+    "nombre": "LAB-REDES",
+    "ubicacion": "Pabellón B, piso 2",
+    "capacidad": 25,
+    "estado": "DISPONIBLE",
+    "numEquipos": 25,
+    "tipoLaboratorio": "Redes"
+  },
+  {
+    "tipo": "SalaEstudio",
+    "idAmbiente": 3,
+    "nombre": "SE-01",
+    "ubicacion": "Biblioteca, piso 3",
+    "capacidad": 8,
+    "estado": "DISPONIBLE",
+    "tienePizarra": true
+  }
+]

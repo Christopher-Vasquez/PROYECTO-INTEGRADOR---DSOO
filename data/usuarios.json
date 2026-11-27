@@ -1,0 +1,26 @@
+[
+  {
+    "idUsuario": 1,
+    "nombre": "Carla Ríos",
+    "email": "carla@uni.edu",
+    "rol": "ADMINISTRADOR"
+  },
+  {
+    "idUsuario": 2,
+    "nombre": "Luis Prado",
+    "email": "luis@uni.edu",
+    "rol": "DOCENTE"
+  },
+  {
+    "idUsuario": 3,
+    "nombre": "Ana Torres",
+    "email": "ana@uni.edu",
+    "rol": "ESTUDIANTE"
+  },
+  {
+    "idUsuario": 4,
+    "nombre": "Mario Silva",
+    "email": "mario@uni.edu",
+    "rol": "MANTENIMIENTO"
+  }
+]
