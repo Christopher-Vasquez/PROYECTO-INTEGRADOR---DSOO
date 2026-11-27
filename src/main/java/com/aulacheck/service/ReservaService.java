@@ -83,4 +83,15 @@ public class ReservaService {
                 .sorted(Comparator.comparing(Reserva::getFecha).thenComparing(Reserva::getHoraInicio))
                 .toList();
     }
+    public void cargarDesdePersistencia(List<Reserva> lista) {
+        reservas.clear();
+        int maxId = 0;
+        for (Reserva r : lista) {
+            reservas.put(r.getIdReserva(), r);
+            if (r.getIdReserva() > maxId) {
+                maxId = r.getIdReserva();
+            }
+        }
+        siguienteId = maxId + 1;
+    }
 }

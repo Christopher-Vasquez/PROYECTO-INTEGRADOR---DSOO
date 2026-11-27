@@ -49,4 +49,16 @@ public class IncidenciaService {
     public List<Incidencia> listarTodas() {
         return List.copyOf(incidencias.values());
     }
+
+    public void cargarDesdePersistencia(List<Incidencia> lista) {
+        incidencias.clear();
+        int maxId = 0;
+        for (Incidencia inc : lista) {
+            incidencias.put(inc.getIdIncidencia(), inc);
+            if (inc.getIdIncidencia() > maxId) {
+                maxId = inc.getIdIncidencia();
+            }
+        }
+        siguienteId = maxId + 1;
+    }
 }

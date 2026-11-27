@@ -78,4 +78,11 @@ public class AmbienteService {
             throw new PermisoDenegadoException("Solo el administrador puede gestionar ambientes");
         }
     }
+    
+    public void cargarDesdePersistencia(List<Ambiente> lista) {
+        ambientes.clear();
+        for (Ambiente a : lista) {
+            ambientes.put(a.getIdAmbiente(), a);
+        }
+    }
 }
