@@ -52,7 +52,7 @@ public class AulaCheckFrame extends JFrame {
         this.incidenciaService = incidenciaService;
         this.usuarios = new ArrayList<>(usuariosIniciales);
 
-        // 1. Cargar datos guardados antes de armar el combo y las tablas
+        // Cargar datos guardados antes de armar el combo y las tablas
         cargarDatosAlIniciar();
 
         this.usuarioActual = this.usuarios.get(0);
@@ -102,7 +102,7 @@ public class AulaCheckFrame extends JFrame {
             actualizarSesion();
         });
 
-        // 2. Guardar automáticamente en JSON al cerrar la ventana
+        // Guardar automáticamente en json al cerrar la ventana
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
             @Override
