@@ -1,15 +1,34 @@
 package com.aulacheck.ui;
 
+import com.aulacheck.exception.AulaCheckException;
+import com.aulacheck.model.Ambiente;
+import com.aulacheck.model.Incidencia;
+import com.aulacheck.model.Reserva;
 import com.aulacheck.model.Usuario;
+import com.aulacheck.persistence.json.AmbienteJsonRepository;
+import com.aulacheck.persistence.json.IncidenciaJsonRepository;
+import com.aulacheck.persistence.json.ReservaJsonRepository;
+import com.aulacheck.persistence.json.UsuarioJsonRepository;
 import com.aulacheck.service.AmbienteService;
 import com.aulacheck.service.IncidenciaService;
 import com.aulacheck.service.ReservaService;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class AulaCheckFrame extends JFrame {
+
+    private final AmbienteService ambienteService;
+    private final ReservaService reservaService;
+    private final IncidenciaService incidenciaService;
+    private final List<Usuario> usuarios;
 
     private Usuario usuarioActual;
 
@@ -19,16 +38,28 @@ public class AulaCheckFrame extends JFrame {
     private final PanelReservas panelReservas;
     private final PanelIncidencias panelIncidencias;
 
+    private final UsuarioJsonRepository usuarioRepo = new UsuarioJsonRepository(Path.of("data", "usuarios.json"));
+    private final AmbienteJsonRepository ambienteRepo = new AmbienteJsonRepository(Path.of("data", "ambientes.json"));
+    private final ReservaJsonRepository reservaRepo = new ReservaJsonRepository(Path.of("data", "reservas.json"));
+    private final IncidenciaJsonRepository incidenciaRepo = new IncidenciaJsonRepository(Path.of("data", "incidencias.json"));
+
     public AulaCheckFrame(AmbienteService ambienteService,
                           ReservaService reservaService,
                           IncidenciaService incidenciaService,
-                          List<Usuario> usuarios) {
-        this.usuarioActual = usuarios.get(0);
+                          List<Usuario> usuariosIniciales) {
+        this.ambienteService = ambienteService;
+        this.reservaService = reservaService;
+        this.incidenciaService = incidenciaService;
+        this.usuarios = new ArrayList<>(usuariosIniciales);
+
+        // 1. Cargar datos guardados antes de armar el combo y las tablas
+        cargarDatosAlIniciar();
+
+        this.usuarioActual = this.usuarios.get(0);
 
         setTitle("AulaCheck - Gestión de Ambientes Universitarios");
         setSize(1020, 660);
         setMinimumSize(new Dimension(900, 560));
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout(8, 8));
 
@@ -41,7 +72,7 @@ public class AulaCheckFrame extends JFrame {
 
         JPanel izquierdaSesion = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         izquierdaSesion.add(new JLabel("Usuario activo:"));
-        comboUsuarios = new JComboBox<>(usuarios.toArray(new Usuario[0]));
+        comboUsuarios = new JComboBox<>(this.usuarios.toArray(new Usuario[0]));
         izquierdaSesion.add(comboUsuarios);
 
         lblInfoUsuario = new JLabel();
@@ -71,6 +102,17 @@ public class AulaCheckFrame extends JFrame {
             actualizarSesion();
         });
 
+        // 2. Guardar automáticamente en JSON al cerrar la ventana
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                guardarDatosAlCerrar();
+                dispose();
+                System.exit(0);
+            }
+        });
+
         actualizarSesion();
     }
 
@@ -89,5 +131,63 @@ public class AulaCheckFrame extends JFrame {
         panelAmbientes.actualizarVista();
         panelReservas.actualizarVista();
         panelIncidencias.actualizarVista();
+    }
+
+    private void cargarDatosAlIniciar() {
+        Path rutaUsuarios = Path.of("data", "usuarios.json");
+        Path rutaAmbientes = Path.of("data", "ambientes.json");
+        Path rutaReservas = Path.of("data", "reservas.json");
+        Path rutaIncidencias = Path.of("data", "incidencias.json");
+
+        if (!Files.exists(rutaUsuarios) || !Files.exists(rutaAmbientes)) {
+            guardarDatosAlCerrar();
+            return;
+        }
+
+        try {
+            List<Usuario> usuariosCargados = usuarioRepo.cargarTodos();
+            List<Ambiente> ambientesCargados = ambienteRepo.cargarTodos();
+
+            List<Reserva> reservasCargadas = Files.exists(rutaReservas)
+                    ? reservaRepo.cargarTodas(usuariosCargados, ambientesCargados)
+                    : List.of();
+
+            List<Incidencia> incidenciasCargadas = Files.exists(rutaIncidencias)
+                    ? incidenciaRepo.cargarTodas(usuariosCargados, ambientesCargados)
+                    : List.of();
+
+            this.usuarios.clear();
+            this.usuarios.addAll(usuariosCargados);
+            ambienteService.cargarDesdePersistencia(ambientesCargados);
+            reservaService.cargarDesdePersistencia(reservasCargadas);
+            incidenciaService.cargarDesdePersistencia(incidenciasCargadas);
+        } catch (AulaCheckException e) {
+            JOptionPane.showMessageDialog(this,
+                    "No se pudieron cargar los datos guardados: " + e.getMessage(),
+                    "Aviso de persistencia",
+                    JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    private void guardarDatosAlCerrar() {
+        try {
+            List<Ambiente> ambientesActuales = ambienteService.listarTodos();
+
+            List<Reserva> todasReservas = new ArrayList<>();
+            for (Ambiente a : ambientesActuales) {
+                todasReservas.addAll(a.getReservas());
+            }
+            todasReservas.sort(Comparator.comparingInt(Reserva::getIdReserva));
+
+            usuarioRepo.guardarTodos(usuarios);
+            ambienteRepo.guardarTodos(ambientesActuales);
+            reservaRepo.guardarTodas(todasReservas);
+            incidenciaRepo.guardarTodas(incidenciaService.listarTodas());
+        } catch (AulaCheckException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al guardar los datos en JSON: " + e.getMessage(),
+                    "Error de persistencia",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 }
