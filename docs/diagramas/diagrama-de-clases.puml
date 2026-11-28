@@ -1,0 +1,110 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+package "model" {
+  abstract class Ambiente {
+    -int idAmbiente
+    -String nombre
+    -String ubicacion
+    -int capacidad
+    -EstadoAmbiente estado
+    +consultarDisponibilidad(fecha, horaInicio, horaFin): boolean
+    +{abstract} getTipo(): String
+  }
+  class Aula { -boolean tieneProyector }
+  class Laboratorio {
+    -int numEquipos
+    -String tipoLaboratorio
+  }
+  class SalaEstudio { -boolean tienePizarra }
+  class Usuario {
+    -int idUsuario
+    -String nombre
+    -String email
+    -RolUsuario rol
+    +consultarDisponibilidad()
+    +crearReserva()
+    +reportarIncidencia()
+  }
+  class Reserva {
+    -int idReserva
+    -LocalDate fecha
+    -LocalTime horaInicio
+    -LocalTime horaFin
+    -EstadoReserva estado
+    +validarConflictoHorario(): boolean
+    +cancelarReserva()
+    +{static} reconstruir(...): Reserva
+  }
+  class Incidencia {
+    -int idIncidencia
+    -String descripcion
+    -LocalDate fechaReporte
+    -EstadoIncidencia estado
+    +actualizarEstado(nuevoEstado)
+    +{static} reconstruir(...): Incidencia
+  }
+}
+
+package "service" {
+  class AmbienteService { +cargarDesdePersistencia(lista) }
+  class ReservaService { +cargarDesdePersistencia(lista) }
+  class IncidenciaService { +cargarDesdePersistencia(lista) }
+}
+
+package "ui" {
+  class AulaCheckFrame {
+    -cargarDatosAlIniciar()
+    -guardarDatosAlCerrar()
+  }
+}
+
+package "persistence.json" {
+  class JsonStore {
+    +guardar(ruta, lista)
+    +cargar(ruta, clase): List
+  }
+  class AmbienteAdapter
+  class UsuarioJsonRepository
+  class AmbienteJsonRepository
+  class ReservaJsonRepository
+  class IncidenciaJsonRepository
+}
+
+package "persistence.jdbc" {
+  class ConexionBD { +{static} obtenerConexion(): Connection }
+  class UsuarioJdbcRepository
+  class AmbienteJdbcRepository
+  class ReservaJdbcRepository
+  class IncidenciaJdbcRepository
+}
+
+Ambiente <|-- Aula
+Ambiente <|-- Laboratorio
+Ambiente <|-- SalaEstudio
+
+Ambiente "1" --> "0..*" Reserva : tiene
+Ambiente "1" --> "0..*" Incidencia : presenta
+Usuario "1" --> "0..*" Reserva : realiza
+Usuario "1" --> "0..*" Incidencia : reporta
+
+AulaCheckFrame --> AmbienteService
+AulaCheckFrame --> ReservaService
+AulaCheckFrame --> IncidenciaService
+AulaCheckFrame ..> UsuarioJsonRepository : carga / guarda
+AulaCheckFrame ..> AmbienteJsonRepository : carga / guarda
+AulaCheckFrame ..> ReservaJsonRepository : carga / guarda
+AulaCheckFrame ..> IncidenciaJsonRepository : carga / guarda
+
+UsuarioJsonRepository ..> JsonStore
+AmbienteJsonRepository ..> JsonStore
+AmbienteJsonRepository ..> AmbienteAdapter
+ReservaJsonRepository ..> JsonStore
+IncidenciaJsonRepository ..> JsonStore
+
+UsuarioJdbcRepository ..> ConexionBD
+AmbienteJdbcRepository ..> ConexionBD
+ReservaJdbcRepository ..> ConexionBD
+IncidenciaJdbcRepository ..> ConexionBD
+@enduml

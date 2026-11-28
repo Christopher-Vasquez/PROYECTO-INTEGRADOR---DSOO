@@ -9,3 +9,7 @@ out/
 .project
 .settings/
 .DS_Store
+
+# Datos locales y credenciales (no subir)
+data/
+src/main/resources/config.properties

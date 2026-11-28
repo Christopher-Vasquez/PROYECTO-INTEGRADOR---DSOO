@@ -58,7 +58,7 @@ public class Incidencia {
     public static Incidencia reconstruir(int idIncidencia, String descripcion, LocalDate fechaReporte,
                                          EstadoIncidencia estado, Usuario reportadoPor, Ambiente ambiente) {
         Incidencia inc = new Incidencia(idIncidencia, descripcion, fechaReporte, estado, reportadoPor, ambiente);
-        ambiente.agregarIncidencia(inc);
+        ambiente.agregarIncidenciaRestaurada(inc); // no altera el estado del ambiente guardado
         reportadoPor.agregarIncidencia(inc);
         return inc;
     }

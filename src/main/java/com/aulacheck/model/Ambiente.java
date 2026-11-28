@@ -72,6 +72,11 @@ public abstract class Ambiente {
         actualizarEstadoPorIncidencias();
     }
 
+    /** Enlaza una incidencia cargada desde persistencia SIN recalcular el estado, que ya viene guardado. */
+    void agregarIncidenciaRestaurada(Incidencia incidencia) {
+        incidencias.add(incidencia);
+    }
+
     /** Si hay incidencias pendientes pasa a mantenimiento; si todas se resolvieron, vuelve a disponible. */
     void actualizarEstadoPorIncidencias() {
         boolean hayPendientes = tieneIncidenciasPendientes();

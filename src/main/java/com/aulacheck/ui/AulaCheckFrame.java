@@ -17,8 +17,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -37,6 +39,9 @@ public class AulaCheckFrame extends JFrame {
     private final PanelAmbientes panelAmbientes;
     private final PanelReservas panelReservas;
     private final PanelIncidencias panelIncidencias;
+
+    /** true si los archivos JSON existían pero no se pudieron cargar. */
+    private boolean cargaFallida = false;
 
     private final UsuarioJsonRepository usuarioRepo = new UsuarioJsonRepository(Path.of("data", "usuarios.json"));
     private final AmbienteJsonRepository ambienteRepo = new AmbienteJsonRepository(Path.of("data", "ambientes.json"));
@@ -162,14 +167,34 @@ public class AulaCheckFrame extends JFrame {
             reservaService.cargarDesdePersistencia(reservasCargadas);
             incidenciaService.cargarDesdePersistencia(incidenciasCargadas);
         } catch (AulaCheckException e) {
+            cargaFallida = true;
             JOptionPane.showMessageDialog(this,
-                    "No se pudieron cargar los datos guardados: " + e.getMessage(),
+                    "No se pudieron cargar los datos guardados: " + e.getMessage()
+                            + "\nAl cerrar se conservará una copia .bak de los archivos originales.",
                     "Aviso de persistencia",
                     JOptionPane.WARNING_MESSAGE);
         }
     }
 
+    /** Si la carga falló, guarda copias .bak de los archivos originales antes de sobrescribirlos. */
+    private void respaldarArchivosOriginales() {
+        for (String nombre : List.of("usuarios", "ambientes", "reservas", "incidencias")) {
+            Path origen = Path.of("data", nombre + ".json");
+            if (Files.exists(origen)) {
+                try {
+                    Files.copy(origen, Path.of("data", nombre + ".json.bak"), StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException ignorada) {
+                    // Si no se puede respaldar, igualmente se continúa.
+                }
+            }
+        }
+    }
+
     private void guardarDatosAlCerrar() {
+        if (cargaFallida) {
+            respaldarArchivosOriginales();
+            cargaFallida = false;
+        }
         try {
             List<Ambiente> ambientesActuales = ambienteService.listarTodos();
 
